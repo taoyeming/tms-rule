@@ -319,8 +319,8 @@ void Swizzle(Class class, SEL originalSelector, Method swizzledMethod)
 
 #pragma mark - User Activity Continuation
 
-+ (void)LP_application:(UIApplication *)application continueUserActivity:(nonnull NSUserActivity *)userActivity restorationHandler:(nonnull void (^)(NSArray<id<UIUserActivityRestoring>> * _Nullable))restorationHandler{
-    LP_Appdelegate_method(self, _cmd, application, userActivity, restorationHandler);
++ (BOOL)LP_application:(UIApplication *)application continueUserActivity:(nonnull NSUserActivity *)userActivity restorationHandler:(nonnull void (^)(NSArray<id<UIUserActivityRestoring>> * _Nullable))restorationHandler{
+    return LP_Appdelegate_method_intercept_return(self, _cmd, application, userActivity, restorationHandler, nil);
 }
 
 + (BOOL)LP_application:(UIApplication *)application willContinueUserActivityWithType:(nonnull NSString *)userActivityType{

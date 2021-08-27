@@ -132,7 +132,7 @@ static NSDictionary* pConfig;
 
 + (BOOL)application:(UIApplication *)application handleOpenURL:(NSURL *)url {
     for (NSString *clsName in plugins) {
-        Class cls = NSClassFromString(clsName);
+        Class<LPPluginProtocol> cls = NSClassFromString(clsName);
         if([[cls sharedInstance] respondsToSelector:@selector(handleUrl:)]) {
             if ([[cls sharedInstance] handleUrl:url]) {
                 return YES;
@@ -146,7 +146,7 @@ static NSDictionary* pConfig;
             openURL:(NSURL *)url
             options:(NSDictionary<UIApplicationOpenURLOptionsKey, id> *)options {
     for (NSString *clsName in plugins) {
-        Class cls = NSClassFromString(clsName);
+        Class<LPPluginProtocol> cls = NSClassFromString(clsName);
         if([[cls sharedInstance] respondsToSelector:@selector(handleUrl:options:)]) {
             if ([[cls sharedInstance] handleUrl:url options:options]) {
                 return YES;
@@ -161,7 +161,7 @@ static NSDictionary* pConfig;
   sourceApplication:(NSString *)sourceApplication
          annotation:(id)annotation {
     for (NSString *clsName in plugins) {
-        Class cls = NSClassFromString(clsName);
+        Class<LPPluginProtocol> cls = NSClassFromString(clsName);
         if([[cls sharedInstance] respondsToSelector:@selector(handleUrl:sourceApplication:annotation:)]) {
             if ([[cls sharedInstance] handleUrl:url sourceApplication:sourceApplication annotation:annotation]) {
                 return YES;
@@ -175,18 +175,15 @@ static NSDictionary* pConfig;
 + (BOOL)application:(UIApplication *)application
 continueUserActivity:(nonnull NSUserActivity *)userActivity
  restorationHandler:(nonnull void (^)(NSArray<id<UIUserActivityRestoring>> * _Nullable))restorationHandler {
-    
-    [plugins enumerateObjectsUsingBlock:^(id _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        Class<LPPluginProtocol> clasz = NSClassFromString(obj);
-        if ([[clasz sharedInstance] respondsToSelector:@selector(application:continueUserActivity:restorationHandler:)]) {
-            [[clasz sharedInstance] application:application
-                          continueUserActivity:userActivity
-                            restorationHandler:restorationHandler];
+    for (NSString *clsName in plugins) {
+        Class<LPPluginProtocol> cls = NSClassFromString(clsName);
+        if([[cls sharedInstance] respondsToSelector:@selector(application:continueUserActivity:restorationHandler:)]) {
+            if([[cls sharedInstance] application:application continueUserActivity:userActivity restorationHandler:restorationHandler]) {
+                return YES;
+            }
         }
-
-    }];
-    
-    
+    }
+    return NO;
 }
 
 
