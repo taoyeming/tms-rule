@@ -119,7 +119,7 @@ static NSDictionary* pConfig;
     
     [plugins enumerateObjectsUsingBlock:^(id _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
         Class<LPPluginProtocol> clasz = NSClassFromString(obj);
-
+        
         if ([[clasz sharedInstance] respondsToSelector:@selector(application:didReceiveRemoteNotification:)]) {
             [[clasz sharedInstance] application:application
                   didReceiveRemoteNotification:userInfo];
@@ -131,42 +131,44 @@ static NSDictionary* pConfig;
 //handle URL
 
 + (BOOL)application:(UIApplication *)application handleOpenURL:(NSURL *)url {
-    
-    [plugins enumerateObjectsUsingBlock:^(id _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        Class<LPPluginProtocol> clasz = NSClassFromString(obj);
-        if ([[clasz sharedInstance] respondsToSelector:@selector(handleUrl:)]) {
-            [[clasz sharedInstance] handleUrl:url];
+    for (NSString *clsName in plugins) {
+        Class cls = NSClassFromString(clsName);
+        if([[cls sharedInstance] respondsToSelector:@selector(handleUrl:)]) {
+            if ([[cls sharedInstance] handleUrl:url]) {
+                return YES;
+            }
         }
-    }];
+    }
+    return NO;
 }
 
 + (BOOL)application:(UIApplication *)app
             openURL:(NSURL *)url
             options:(NSDictionary<UIApplicationOpenURLOptionsKey, id> *)options {
-    
-    [plugins enumerateObjectsUsingBlock:^(id _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        Class<LPPluginProtocol> clasz = NSClassFromString(obj);
-        BOOL is = [clasz respondsToSelector:@selector(handleUrl:options:)];
-        if ([[clasz sharedInstance] respondsToSelector:@selector(handleUrl:options:)]) {
-            [[clasz sharedInstance] handleUrl:url options:options];
+    for (NSString *clsName in plugins) {
+        Class cls = NSClassFromString(clsName);
+        if([[cls sharedInstance] respondsToSelector:@selector(handleUrl:options:)]) {
+            if ([[cls sharedInstance] handleUrl:url options:options]) {
+                return YES;
+            }
         }
-    }];
-    
+    }
+    return NO;
 }
 
 + (BOOL)application:(UIApplication *)application
             openURL:(NSURL *)url
   sourceApplication:(NSString *)sourceApplication
          annotation:(id)annotation {
-    [plugins enumerateObjectsUsingBlock:^(id _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        Class<LPPluginProtocol> clasz = NSClassFromString(obj);
-
-        if ([[clasz sharedInstance] respondsToSelector:@selector(handleUrl:sourceApplication:annotation:)]) {
-            [[clasz sharedInstance] handleUrl:url sourceApplication:sourceApplication annotation:annotation];
+    for (NSString *clsName in plugins) {
+        Class cls = NSClassFromString(clsName);
+        if([[cls sharedInstance] respondsToSelector:@selector(handleUrl:sourceApplication:annotation:)]) {
+            if ([[cls sharedInstance] handleUrl:url sourceApplication:sourceApplication annotation:annotation]) {
+                return YES;
+            }
         }
-        
-
-    }];
+    }
+    return NO;
 }
 
 

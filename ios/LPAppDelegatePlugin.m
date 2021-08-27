@@ -36,6 +36,32 @@ void call_AppDelegate_Plugins(SEL _cmd_, id _application_, id _args1_, id _args2
   
 }
 
+BOOL call_AppDelegate_intercept_Plugins(SEL _cmd_, id _application_, id _args1_, id _args2_, id _args3_) {
+    for (id obj in LPAppDelegatePluginObjects) {
+        Class cla = [obj class];
+        if ([cla respondsToSelector:_cmd_]) {
+            Method m = class_getClassMethod(obj, _cmd_);
+            IMP method = method_getImplementation(m);
+            BOOL (* callMethod)(id,SEL,id,id,id,id) = (void *)method;
+            
+            if(callMethod(cla, _cmd_, _application_,_args1_,_args2_,_args3_))
+                return YES;
+        }
+    }
+    
+    for (Class cla in LPAppDelegatePluginClass) {
+        if ([cla respondsToSelector:_cmd_]) {
+            Method m = class_getClassMethod(cla, _cmd_);
+            IMP method = method_getImplementation(m);
+            BOOL (* callMethod)(id,SEL,id,id,id,id) = (void *)method;
+            
+            if(callMethod(cla, _cmd_, _application_,_args1_,_args2_,_args3_))
+                return YES;
+        }
+    }
+    return NO;
+}
+
 NSUInteger LP_Appdelegate_inter_method_return(id _self_, SEL _cmd_, id _application_, id _args1_, id _args2_, id _args3_) {
     NSUInteger returnValue = NO;
     SEL LP_selector = NSSelectorFromString([NSString stringWithFormat:@"LP_%@", NSStringFromSelector(_cmd_)]);
@@ -59,6 +85,19 @@ BOOL LP_Appdelegate_method_return(id _self_, SEL _cmd_, id _application_, id _ar
         returnValue = callMethod(_self_,LP_selector,_application_,_args1_,_args2_,_args3_);
     }
    call_AppDelegate_Plugins(_cmd_, _application_, _args1_, _args2_, _args3_);
+    return returnValue;
+}
+
+BOOL LP_Appdelegate_method_intercept_return(id _self_, SEL _cmd_, id _application_, id _args1_, id _args2_, id _args3_) {
+    BOOL returnValue = NO;
+    SEL LP_selector = NSSelectorFromString([NSString stringWithFormat:@"LP_%@", NSStringFromSelector(_cmd_)]);
+    Method m = class_getClassMethod([LPAppDelegatePlugin class], LP_selector);
+    IMP method = method_getImplementation(m);
+    returnValue = call_AppDelegate_intercept_Plugins(_cmd_, _application_, _args1_, _args2_, _args3_);
+    if (!returnValue && ![NSStringFromSelector(_cmd_) hasPrefix:@"LP_"]) {
+        BOOL (* callMethod)(id,SEL,id,id,id,id) = (void *)method;
+        returnValue = callMethod(_self_,LP_selector,_application_,_args1_,_args2_,_args3_);
+    }
     return returnValue;
 }
 
@@ -266,15 +305,15 @@ void Swizzle(Class class, SEL originalSelector, Method swizzledMethod)
 #pragma mark - OpenURL Options
 
 + (BOOL)LP_application:(UIApplication *)application handleOpenURL:(NSURL *)url {
-    return LP_Appdelegate_method_return(self,_cmd,application,url,nil,nil);
+    return LP_Appdelegate_method_intercept_return(self,_cmd,application,url,nil,nil);
 }
 
 + (BOOL)LP_application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(nullable NSString *)sourceApplication annotation:(id)annotation  {
-    return LP_Appdelegate_method_return(self,_cmd,application,url,sourceApplication,annotation);
+    return LP_Appdelegate_method_intercept_return(self,_cmd,application,url,sourceApplication,annotation);
 }
 
 + (BOOL)LP_application:(UIApplication *)application openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey, id> *)options {
-    return LP_Appdelegate_method_return(self,_cmd,application,url,options,nil);
+    return LP_Appdelegate_method_intercept_return(self,_cmd,application,url,options,nil);
 }
 
 
