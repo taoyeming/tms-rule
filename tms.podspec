@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name                = "tms"
-  s.version             = "0.0.10"
+  s.version             = "0.0.11"
   s.summary             = "tms"
   s.description         = <<-DESC
                             tms lib for ios.
